@@ -35,20 +35,14 @@ architecture Behavioral of adc_ctrl is
   
 begin  -- architecture Behavioral
 
+  trg     <= D(1);
+  ADC_OUT <= D(0);
   Q       <= busy & adc_data_reg & AD_CONV & SPI_SCK;
   SPI_SCK <= not CLK when state = S_receive else '0';
   busy    <= '1' when state /= S_idle else '0';
 
   C0 : oneshot_plus port map (CLK, trg, AD_CONV);
 
-  process(CLK)
-  begin
-    if (CLK'event and CLK = '1') then
-      trg     <= D(1);
-      ADC_OUT <= D(0);
-    end if;
-  end process;
-         
   process(CLK)
   begin
     if (CLK'event and CLK = '1') then
@@ -59,8 +53,8 @@ begin  -- architecture Behavioral
           when S_reset   => adc_data <= (others => '0');
           when S_idle    => adc_data <= (others => '0');
           when S_receive => adc_data <= adc_data(32 downto 0) & ADC_OUT;
-            if char_cnt = "100010" then
-              --if char_cnt = "100101" then
+            --if char_cnt = "100010" then
+				if char_cnt = "100011" then
               adc_data_reg <= adc_data;
             end if;
         end case;
@@ -96,8 +90,8 @@ begin  -- architecture Behavioral
               state <= S_receive;
             end if;
           when S_receive =>
-            if char_cnt = "100011" then
-              --if char_cnt = "100101" then
+            --if char_cnt = "100010" then
+				if char_cnt = "100011" then
               state <= S_idle;
             end if;
         end case;

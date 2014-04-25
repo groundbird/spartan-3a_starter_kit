@@ -33,26 +33,17 @@ architecture Behavioral of amp_ctrl is
   
 begin  -- architecture Behavioral
   
---  trg          <= D(8);
---  gain         <= D(7 downto 0);
+  trg          <= D(8);
+  gain         <= D(7 downto 0);
   Q            <= busy & AMP_CS & AMP_SHDN & SPI_SCK & SPI_MOSI;
-  busy         <= '1' when state /= S_idle else '0';
-  AMP_CS       <= '0' when state  = S_send else '1';
---  AMP_SHDN     <= '1' when state  = S_reset else '0';
-  AMP_SHDN     <= RST;
+  busy         <= '1' when state /= S_idle  else '0';
+  AMP_CS       <= '0' when state  = S_send  else '1';
+  AMP_SHDN     <= '1' when state  = S_reset else '0';
   SPI_SCK      <= spi_sck_reg(1) when state = S_send else '0';
   spi_sck_up   <= '1' when spi_sck_reg = "10" else '0';
   spi_sck_down <= '1' when spi_sck_reg = "01" else '0';
 --  SPI_MOSI     <= spi_data(7) when state = S_send else '0';
-  SPI_MOSI     <= spi_data(7) when state = S_send else '0';
-
-  process(CLK)
-  begin
-    if (CLK'event and CLK = '1') then
-      trg  <= D(8);
-      gain <= D(7 downto 0);
-    end if;
-  end process;
+  SPI_MOSI     <= spi_data(7);
   
   process(CLK)
   begin

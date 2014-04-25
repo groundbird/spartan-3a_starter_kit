@@ -23,11 +23,10 @@ architecture Behavioral of main_dac is
   component rotary_switch
     generic (N : integer);
     port (
-      CLK   : in  std_logic;
-      ROT_A : in  std_logic;
-      ROT_B : in  std_logic;
-      ROT_C : in  std_logic;
-      Q     : out std_logic_vector(N-1 downto 0));
+      CLK : in  std_logic;
+		RST : in  std_logic;
+		D   : in  std_logic_vector(1 downto 0);
+      Q   : out std_logic_vector(N-1 downto 0));
   end component rotary_switch;
 
   component dac

@@ -29,25 +29,15 @@ architecture Behavioral of dac_ctrl is
   
 begin  -- architecture Behavioral
 
---  trg      <= D(32);
---  dac_data <= D(31 downto 0);
+  trg      <= D(32);
+  dac_data <= D(31 downto 0);
   Q        <= busy & DAC_CS & DAC_CLR & SPI_SCK & SPI_MOSI;
   busy     <= '1' when state /= S_idle  else '0';
   DAC_CS   <= '0' when state  = S_send  else '1';
-  --DAC_CLR  <= '0' when state  = S_reset else '1';
-  DAC_CLR  <= not RST;
-  --SPI_SCK  <= not CLK when state = S_send  else '0';
-  SPI_SCK  <= not CLK when (state = S_send and char_cnt < X"21") else '0';
-  SPI_MOSI <= spi_data(31) when state = S_send else '0';
+  DAC_CLR  <= '0' when state  = S_reset else '1';
+  SPI_SCK  <= not CLK when state = S_send  else '0';
+  SPI_MOSI <= spi_data(31);
 
-  process(CLK)
-  begin
-    if (CLK'event and CLK = '1') then
-      trg      <= D(32);
-      dac_data <= D(31 downto 0);
-    end if;
-  end process;
-    
   process(CLK)
   begin
     if (CLK'event and CLK = '1') then
@@ -61,7 +51,8 @@ begin  -- architecture Behavioral
               state <= S_send;
             end if;
           when S_send  =>
-            if char_cnt = "100001" then
+            if char_cnt(5) = '1' then
+				--if char_cnt = "11111" then
               state <= S_idle;
             end if;
         end case;
@@ -71,7 +62,7 @@ begin  -- architecture Behavioral
 
   process(CLK)
   begin
-    if (CLK'event and CLK = '1') then
+    if (CLK'event and CLK = '0') then
       if RST = '1' then
         spi_data <= (others => '0');
       else

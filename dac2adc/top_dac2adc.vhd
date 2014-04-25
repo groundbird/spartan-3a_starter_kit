@@ -36,7 +36,7 @@ architecture Behavioral of top_dac2adc is
   signal d_main   : std_logic_vector(2  downto 0);
   signal q_main   : std_logic_vector(40 downto 0);
   signal adc_data : std_logic_vector(33 downto 0);
-  signal ch0, ch1 : std_logic_vector(13 downto 0);
+  signal ch0, ch1 : std_logic_vector(13 downto 0) := (others => '0');
   
 begin  -- architecture Behavioral
 
@@ -55,11 +55,10 @@ begin  -- architecture Behavioral
   adc_data <= q_main(33 downto 0);
   ch0      <= adc_data(31 downto 18);
   ch1      <= adc_data(15 downto  2);
-  LED      <= ch0(13 downto 6) when SLIDE_SW = '0' else -- ch. 0
-              ch1(13 downto 6);                         -- ch. 1
---  LED      <= ch0(13) & (not ch0(12 downto 6)) when SLIDE_SW = '0' else
---              ch1(13) & (not ch1(12 downto 6)); 
-
+--  LED      <= ch0(13 downto 6) when SLIDE_SW = '0' else -- ch. 0
+--              ch1(13 downto 6);                         -- ch. 1
+  LED      <= ch0(13) & (not ch0(12 downto 6)) when SLIDE_SW = '0' else
+              ch1(13) & (not ch1(12 downto 6));
   test_dac_adc : dac2adc port map (CLK, ROT_C, d_main, q_main);
 
 end architecture Behavioral;

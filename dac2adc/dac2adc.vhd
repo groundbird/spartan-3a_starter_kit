@@ -59,10 +59,10 @@ architecture Behavioral of dac2adc is
 
   -- state
   type state_type is (S_idle, S_dac, S_amp, S_adc);
-  signal state        : state_type;
+  signal state : state_type;
   -- rotary_switch
-  --signal ROT_A        : std_logic;
-  --signal ROT_B        : std_logic;
+  signal ROT_A        : std_logic;
+  signal ROT_B        : std_logic;
   signal d_rot        : std_logic_vector(1 downto 0);
   signal q_rot        : std_logic_vector(7 downto 0);
   -- dac_ctrl
@@ -75,7 +75,7 @@ architecture Behavioral of dac2adc is
   signal spi_sck_dac  : std_logic;
   signal spi_mosi_dac : std_logic;
   signal d_dac        : std_logic_vector(32 downto 0);
-  signal q_dac        : std_logic_vector(4  downto 0);
+  signal q_dac        : std_logic_vector(4 downto 0);
   -- amp_ctrl
   signal mode_amp     : std_logic;
   signal trg_amp      : std_logic;
@@ -92,15 +92,15 @@ architecture Behavioral of dac2adc is
   signal busy_adc     : std_logic;
   signal AD_CONV      : std_logic;
   signal AMP_SHDN     : std_logic;
---  signal ADC_OUT      : std_logic;
+  signal ADC_OUT      : std_logic;
   signal adc_data     : std_logic_vector(33 downto 0);
   signal spi_sck_adc  : std_logic;
-  signal d_adc        : std_logic_vector(1  downto 0);
+  signal d_adc        : std_logic_vector(1 downto 0);
   signal q_adc        : std_logic_vector(36 downto 0);
   -- common
   signal SPI_SCK      : std_logic;
   signal SPI_MOSI     : std_logic;
-  signal cnt          : std_logic_vector(5 downto 0) := (others => '0');
+  signal cnt          : std_logic_vector(7 downto 0) := (others => '0');
   
 begin  -- architecture Behavioral
 
@@ -114,15 +114,12 @@ begin  -- architecture Behavioral
   SPI_MOSI <= spi_mosi_dac when state = S_dac else
               spi_mosi_amp when state = S_amp else '0';
   -- rotary_switch
-  --ROT_A <= D(1);
-  --ROT_B <= D(0);
-  --d_rot <= ROT_A & ROT_B;
-  d_rot <= D(1) & D(0);
+  ROT_A <= D(1);
+  ROT_B <= D(0);
+  d_rot <= ROT_A & ROT_B;
   dac_data(23 downto 20) <= "0011"; -- command[3:0]
-  dac_data(19 downto 16) <= "0000"; -- address[3:0] DAC_A
-  --dac_data(19 downto 16) <= "0001"; -- address[3:0] DAC_B
+  dac_data(19 downto 16) <= "0000"; -- address (use DAC_A)
   dac_data(15 downto  4) <= q_rot & "0000";
-  --dac_data(15 downto  4) <= "11111111" & "0000";
   -- dac_ctrl
   d_dac        <= trg_dac & dac_data;
   mode_dac     <= '1' when state = S_dac else '0';
@@ -140,16 +137,16 @@ begin  -- architecture Behavioral
   spi_sck_amp  <= q_amp(1) when state = S_amp else '0';
   spi_mosi_amp <= q_amp(0);
   -- adc_ctrl
-  d_adc       <= trg_adc & D(2);
+  ADC_OUT     <= D(2);
+  d_adc       <= trg_adc & ADC_OUT;
   mode_adc    <= '1' when state = S_adc else '0';
   busy_adc    <= q_adc(36);
   adc_data    <= q_adc(35 downto 2);
   AD_CONV     <= q_adc(1) when state = S_adc else '0';
   spi_sck_adc <= q_adc(0) when state = S_adc else '0';
 
-  U0 : rotary_switch
-    generic map (N => 8)
-    port map (CLK, RST, d_rot, q_rot);
+  U0 : rotary_switch generic map (N => 8) 
+	                  port map (CLK, RST, d_rot, q_rot);
   U1 : dac_ctrl      port map (CLK, RST, d_dac, q_dac);
   U2 : amp_ctrl      port map (CLK, RST, d_amp, q_amp);
   U3 : adc_ctrl      port map (CLK, RST, d_adc, q_adc);
@@ -168,22 +165,20 @@ begin  -- architecture Behavioral
         case state is
           when S_idle => state <= S_dac;
           when S_dac  =>
-            --if cnt(6) = '1' then
-            if cnt = "100111" then
+            if cnt(5) = '1' then
               state <= S_amp;
               cnt <= (others => '0');
             end if;
           when S_amp  =>
-            --if cnt(6) = '1' then
-            if cnt = "111111" then
+            if cnt(6) = '1' then
               state <= S_adc;
-            --cnt   <= (others => '0');
+				  cnt   <= (others => '0');
             end if;
           when S_adc  =>
-            --if cnt(6) = '1' then
-            if cnt = "111111" then
+            if cnt(6) = '1' then
+				--if cnt(5) = '1' then
               state <= S_idle;
-            --cnt   <= (others => '0');
+              cnt   <= (others => '0');
             end if;
         end case;
       end if;
